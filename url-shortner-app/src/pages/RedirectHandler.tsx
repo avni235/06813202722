@@ -8,27 +8,59 @@ export default function RedirectHandler() {
   useEffect(() => {
     if (!shortcode) return;
 
-    const longUrl = localStorage.getItem(shortcode);
+    const metaString = localStorage.getItem(`meta-${shortcode}`);
 
-    if (longUrl) {
-      Log({
-        stack: "frontend",
-        level: "info",
-        package: "utils",
-        message: `Redirected ${shortcode} to ${longUrl}`
-      });
-      window.location.replace(longUrl); // ✅ force redirect outside SPA
+    if (metaString) {
+      try {
+        const meta = JSON.parse(metaString);
+        const longUrl = meta.original;
+
+        if (!longUrl) {
+          Log({
+            stack: "frontend",
+            level: "error",
+            package: "utils",
+            message: `No long URL found in metadata for ${shortcode}`
+          });
+          return;
+        }
+
+        // Track click
+        const click = {
+          timestamp: new Date().toLocaleString(),
+          source: document.referrer || "Direct",
+          location: "India"
+        };
+
+        meta.clicks = meta.clicks || [];
+        meta.clicks.push(click);
+        localStorage.setItem(`meta-${shortcode}`, JSON.stringify(meta));
+
+        Log({
+          stack: "frontend",
+          level: "info",
+          package: "utils",
+          message: `Redirecting ${shortcode} to ${longUrl}`
+        });
+
+        window.location.replace(longUrl);
+      } catch (err) {
+        Log({
+          stack: "frontend",
+          level: "error",
+          package: "utils",
+          message: `Failed to parse metadata for ${shortcode}`
+        });
+      }
     } else {
       Log({
         stack: "frontend",
         level: "error",
         package: "utils",
-        message: `No mapping found for ${shortcode}`
+        message: `No meta found for shortcode: ${shortcode}`
       });
-      // Redirect back to home or error page
-      window.location.replace("/");
     }
   }, [shortcode]);
 
-  return <div>Redirecting...</div>;
+  return <div>Redirecting to your destination...</div>;
 }

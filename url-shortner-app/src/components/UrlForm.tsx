@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Box, TextField, Button } from "@mui/material";
+import { useNavigate } from "react-router-dom"; // 🧭 Import navigate
 import { Log } from "../../../LoggingMiddleware/src/utils/logger";
 
 interface Entry {
@@ -16,6 +17,8 @@ export default function UrlForm({ onAdd }: UrlFormProps) {
   const [entries, setEntries] = useState<Entry[]>([
     { url: "", shortcode: "", valid: "30" }
   ]);
+
+  const navigate = useNavigate(); // 🧭 Hook for redirection
 
   const addRow = () => {
     if (entries.length < 5) {
@@ -73,9 +76,16 @@ export default function UrlForm({ onAdd }: UrlFormProps) {
           />
         </Box>
       ))}
-      <Button onClick={addRow}>+ Add</Button>
-      <Button onClick={submit} variant="contained" sx={{ ml: 2 }}>
+
+      <Button onClick={submit} variant="contained" sx={{ mr: 2 }}>
         Shorten
+      </Button>
+      <Button
+        variant="outlined"
+        color="secondary"
+        onClick={() => navigate("/stats")}
+      >
+        Go to Stats Page
       </Button>
     </Box>
   );

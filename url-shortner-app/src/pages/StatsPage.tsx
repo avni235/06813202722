@@ -30,31 +30,39 @@ export default function StatsPage() {
   const [urls, setUrls] = useState<ShortURLData[]>([])
 
   useEffect(() => {
-    Log({
-      stack: "frontend",
-      level: "info",
-      package: "page",
-      message: "Visited stats page"
-    })
+  Log({
+    stack: "frontend",
+    level: "info",
+    package: "page",
+    message: "Visited stats page"
+  });
 
-    // Load data from localStorage
-    const keys = Object.keys(localStorage)
-    const records: ShortURLData[] = []
+  const now = new Date().getTime();
+  const keys = Object.keys(localStorage);
+  const records: ShortURLData[] = [];
 
-    keys.forEach((key) => {
-      try {
-        const val = localStorage.getItem(key)
-        if (val?.startsWith("{")) {
-          const parsed = JSON.parse(val) as ShortURLData
-          records.push(parsed)
+  keys.forEach((key) => {
+    try {
+      if (!key.startsWith("meta-")) return; // Only pick meta entries
+
+      const val = localStorage.getItem(key);
+      if (val?.startsWith("{")) {
+        const parsed = JSON.parse(val) as ShortURLData;
+
+        // Parse expiry
+        const expiryTime = new Date(parsed.expiresAt).getTime();
+        if (expiryTime > now) {
+          records.push(parsed); // only keep valid (non-expired) entries
         }
-      } catch (err) {
-        // Ignore bad entries
       }
-    })
+    } catch (err) {
+      // Ignore invalid JSON
+    }
+  });
 
-    setUrls(records)
-  }, [])
+  setUrls(records);
+}, []);
+
 
   return (
     <Box p={3}>
